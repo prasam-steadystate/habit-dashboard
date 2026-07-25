@@ -24,18 +24,20 @@ async function signOut() {
   await _supabase.auth.signOut();
 }
 
-// entries: { id, user_id, habit_id, date ('YYYY-MM-DD'), done }
+// entries: { id, user_id, habit_id, date ('YYYY-MM-DD'), done, value }
 
-async function getEntries(sinceDate) {
-  const { data, error } = await _supabase
+async function getEntries(sinceDate, untilDate) {
+  let query = _supabase
     .from("entries")
-    .select("habit_id, date, done")
+    .select("habit_id, date, done, value")
     .gte("date", sinceDate);
+  if (untilDate) query = query.lte("date", untilDate);
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 }
 
-async function setEntry(habitId, date, done) {
+async function setEntry(habitId, date, { done, value = null }) {
   const session = await getSession();
   const { error } = await _supabase.from("entries").upsert(
     {
@@ -43,6 +45,7 @@ async function setEntry(habitId, date, done) {
       habit_id: habitId,
       date,
       done,
+      value,
     },
     { onConflict: "user_id,habit_id,date" }
   );

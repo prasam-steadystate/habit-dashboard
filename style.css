@@ -6,6 +6,10 @@
   --muted: #8b93a3;
   --accent: #3ecf8e;
   --accent-dim: #1f3d31;
+  --yellow: #e8b93e;
+  --yellow-dim: #3d3520;
+  --red: #e8543e;
+  --red-dim: #3d241f;
 }
 
 * { box-sizing: border-box; }
@@ -88,6 +92,67 @@ header h1 { font-size: 1.1rem; margin: 0; }
   cursor: pointer;
 }
 
+/* Range selector */
+#range-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+#range-select,
+#custom-range input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+#custom-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Overarching tracker */
+.tracker-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.tracker-today {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.tracker-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-green .tracker-dot { background: var(--accent); }
+.status-yellow .tracker-dot { background: var(--yellow); }
+.status-red .tracker-dot { background: var(--red); }
+.status-none .tracker-dot { background: var(--border); }
+
+.cell.status-green { background: var(--accent); }
+.cell.status-yellow { background: var(--yellow); }
+.cell.status-red { background: var(--red); }
+.cell.status-none { background: var(--border); }
+
 .habit-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -103,28 +168,122 @@ header h1 { font-size: 1.1rem; margin: 0; }
   margin-bottom: 12px;
 }
 
-.toggle {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+/* Full-row tappable toggle for boolean habits */
+.habit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
   border: 2px solid var(--border);
+  border-radius: 10px;
   background: transparent;
-  font-size: 1.4rem;
+  color: var(--text);
+  text-align: left;
   cursor: pointer;
-  flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 
-.toggle:active { transform: scale(0.92); }
+.habit-toggle:active { transform: scale(0.98); }
 
-.toggle.done {
+.habit-toggle.done {
   background: var(--accent-dim);
   border-color: var(--accent);
 }
 
-.habit-info { flex: 1; }
+.toggle-static {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.toggle-static.done {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.emoji { font-size: 1.4rem; }
+
+.check {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.habit-info { flex: 1; display: flex; flex-direction: column; }
 .habit-name { font-weight: 600; }
 .habit-streak { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+
+/* Work habit: progress + timer */
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.timer-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timer-btn.running {
+  border-color: var(--red);
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.timer-live {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 44px;
+}
+
+.adjust-buttons {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.adjust-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
 
 .heatmap {
   display: grid;

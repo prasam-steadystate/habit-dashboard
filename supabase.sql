@@ -6,6 +6,7 @@ create table entries (
   habit_id text not null,
   date date not null,
   done boolean not null default true,
+  value integer,
   note text,
   created_at timestamptz not null default now(),
   unique (user_id, habit_id, date)

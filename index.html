@@ -31,6 +31,24 @@
         <button id="sign-out">sign out</button>
       </div>
     </header>
+
+    <div id="range-bar">
+      <select id="range-select">
+        <option value="30d" selected>Last 30 days</option>
+        <option value="90d">Last 90 days</option>
+        <option value="6m">Last 6 months</option>
+        <option value="12m">Last 12 months</option>
+        <option value="ytd">Year to date</option>
+        <option value="custom">Custom range</option>
+      </select>
+      <div id="custom-range" class="hidden">
+        <input type="date" id="range-start" />
+        <span>to</span>
+        <input type="date" id="range-end" />
+      </div>
+    </div>
+
+    <div id="tracker"></div>
     <div id="habits"></div>
   </div>
 
