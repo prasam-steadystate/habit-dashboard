@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Steady State Growth</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f1115" />
+  <meta name="theme-color" content="#0A0C10" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <link rel="stylesheet" href="style.css" />
@@ -13,43 +13,115 @@
 <body>
 
   <div id="login-view">
-    <h1>Steady State Growth</h1>
-    <p class="tagline">Small, consistent effort. Compounded.</p>
-    <form id="login-form">
-      <input type="email" id="email" placeholder="you@email.com" required autocomplete="email" />
-      <button type="submit">Send link</button>
-    </form>
-    <div id="login-status"></div>
+    <div class="login-card">
+      <div class="mark">
+        <svg width="20" height="20" viewBox="0 0 100 100">
+          <path d="M12 74 L36 54 L52 63 L88 24" stroke="#3ECF8E" stroke-width="10" fill="none"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>Steady State Growth</h1>
+      <p class="tagline">Small, consistent effort. Compounded.</p>
+      <form id="login-form">
+        <input type="email" id="email" placeholder="you@email.com" required autocomplete="email" />
+        <button type="submit">Send link</button>
+      </form>
+      <div id="login-status"></div>
+    </div>
   </div>
 
   <div id="app-view" class="hidden">
-    <header>
-      <h1>Today</h1>
-      <div>
-        <span id="today-label"></span>
-        &nbsp;·&nbsp;
-        <button id="sign-out">sign out</button>
-      </div>
-    </header>
+    <div class="shell">
 
-    <div id="range-bar">
-      <select id="range-select">
-        <option value="30d" selected>Last 30 days</option>
-        <option value="90d">Last 90 days</option>
-        <option value="6m">Last 6 months</option>
-        <option value="12m">Last 12 months</option>
-        <option value="ytd">Year to date</option>
-        <option value="custom">Custom range</option>
-      </select>
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark">
+            <svg width="17" height="17" viewBox="0 0 100 100">
+              <path d="M12 74 L36 54 L52 63 L88 24" stroke="#3ECF8E" stroke-width="10" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>Steady State Growth</h1>
+            <div class="sub" id="today-label"></div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="seg" id="range-seg">
+            <button data-range="30d" class="on">30d</button>
+            <button data-range="90d">90d</button>
+            <button data-range="6m">6m</button>
+            <button data-range="12m">12m</button>
+            <button data-range="ytd">YTD</button>
+            <button data-range="custom">Custom</button>
+          </div>
+          <button class="ghost icon-btn" id="sound-toggle" title="Toggle sound">🔊</button>
+          <button class="ghost" id="sign-out">Sign out</button>
+        </div>
+      </div>
+
       <div id="custom-range" class="hidden">
         <input type="date" id="range-start" />
         <span>to</span>
         <input type="date" id="range-end" />
       </div>
-    </div>
 
-    <div id="tracker"></div>
-    <div id="habits"></div>
+      <!-- MASTER TRACKER -->
+      <div class="master">
+        <div class="master-left">
+          <div class="ring">
+            <svg viewBox="0 0 112 112" width="112" height="112">
+              <circle class="ring-bg" cx="56" cy="56" r="48" />
+              <circle class="ring-fg" cx="56" cy="56" r="48" stroke="url(#ringGrad)" />
+              <defs>
+                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#F0B429"/>
+                  <stop offset="100%" stop-color="#46E09B"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="ring-label">
+              <div class="ring-big"><span id="ring-count">0</span><span class="ring-den">/4</span></div>
+              <div class="ring-small">TODAY</div>
+            </div>
+            <div id="confetti"></div>
+          </div>
+
+          <div class="today-meta">
+            <div class="status" id="status-pill"><span class="dot"></span><span id="status-text"></span></div>
+            <h2 id="status-headline"></h2>
+            <p id="status-sub"></p>
+          </div>
+        </div>
+
+        <div class="vrule"></div>
+
+        <div class="master-right">
+          <div class="stats">
+            <div class="stat"><div class="v" id="stat-streak">—</div><div class="k">Current all-green streak</div></div>
+            <div class="stat"><div class="v" id="stat-rate">—</div><div class="k">Days green</div></div>
+            <div class="stat"><div class="v" id="stat-best">—</div><div class="k">Best streak</div></div>
+            <div class="stat"><div class="v" id="stat-completion">—</div><div class="k">Habit completion</div></div>
+          </div>
+
+          <div class="striphead">
+            <span id="strip-label">LAST 30 DAYS</span>
+            <span>Today &rarr;</span>
+          </div>
+          <div id="master-strip" class="strip-wrap"></div>
+
+          <div class="legend">
+            <span><i class="lg-green"></i> All 4</span>
+            <span><i class="lg-yellow"></i> Missed 1</span>
+            <span><i class="lg-red"></i> Missed 2+</span>
+            <span><i class="lg-empty"></i> No data</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="habits"></div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
