@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Steady State Growth</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f1115" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="login-view">
+    <h1>Steady State Growth</h1>
+    <p class="tagline">Small, consistent effort. Compounded.</p>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="you@email.com" required autocomplete="email" />
+      <button type="submit">Send link</button>
+    </form>
+    <div id="login-status"></div>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <header>
+      <h1>Today</h1>
+      <div>
+        <span id="today-label"></span>
+        &nbsp;·&nbsp;
+        <button id="sign-out">sign out</button>
+      </div>
+    </header>
+    <div id="habits"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
