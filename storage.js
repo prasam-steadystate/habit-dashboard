@@ -24,7 +24,46 @@ async function signOut() {
   await _supabase.auth.signOut();
 }
 
-// entries: { id, user_id, habit_id, date ('YYYY-MM-DD'), done, value }
+/* ---------- habits ----------
+   { id, user_id, key, name, emoji, type: 'boolean'|'minutes', target,
+     sort_order, archived }
+   `key` is immutable once created — entries.habit_id points at it. */
+
+async function getHabits({ includeArchived = false } = {}) {
+  let query = _supabase.from("habits").select("*").order("sort_order", { ascending: true });
+  if (!includeArchived) query = query.eq("archived", false);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+async function seedHabits(rows) {
+  const session = await getSession();
+  const payload = rows.map((r) => ({ ...r, user_id: session.user.id }));
+  const { error } = await _supabase
+    .from("habits")
+    .upsert(payload, { onConflict: "user_id,key", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+async function addHabit(habit) {
+  const session = await getSession();
+  const { data, error } = await _supabase
+    .from("habits")
+    .insert({ ...habit, user_id: session.user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateHabit(id, patch) {
+  const { error } = await _supabase.from("habits").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+/* ---------- entries ----------
+   { id, user_id, habit_id, date ('YYYY-MM-DD'), done, value } */
 
 async function getEntries(sinceDate, untilDate) {
   let query = _supabase
@@ -37,12 +76,12 @@ async function getEntries(sinceDate, untilDate) {
   return data;
 }
 
-async function setEntry(habitId, date, { done, value = null }) {
+async function setEntry(habitKey, date, { done, value = null }) {
   const session = await getSession();
   const { error } = await _supabase.from("entries").upsert(
     {
       user_id: session.user.id,
-      habit_id: habitId,
+      habit_id: habitKey,
       date,
       done,
       value,
