@@ -25,8 +25,11 @@ async function signOut() {
 }
 
 /* ---------- habits ----------
-   { id, user_id, key, name, emoji, type: 'boolean'|'minutes', target,
-     sort_order, archived }
+   { id, user_id, key, name, emoji, sort_order, archived,
+     type: 'boolean' | 'time' | 'duration' | 'count',
+     target,        -- duration: always MINUTES. count: raw count.
+     unit,          -- display unit ('min'|'hr'|'glasses'|'oz'|'ml'|'L'|'meals')
+     time_of_day }  -- 'HH:MM' for type 'time'
    `key` is immutable once created — entries.habit_id points at it. */
 
 async function getHabits({ includeArchived = false } = {}) {

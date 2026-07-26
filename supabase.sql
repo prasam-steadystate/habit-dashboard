@@ -1,5 +1,5 @@
--- Run in Supabase: Project → SQL Editor → New query → paste → Run.
--- Safe to re-run: policies are dropped before being recreated.
+-- Run in Supabase: Project → SQL Editor → New query → paste ALL of this → Run.
+-- Safe to re-run.
 
 -- ── entries ────────────────────────────────────────────────────────────────
 create table if not exists entries (
@@ -33,13 +33,23 @@ create table if not exists habits (
   key text not null,               -- stable; entries.habit_id points at this
   name text not null,
   emoji text not null default '✅',
-  type text not null default 'boolean' check (type in ('boolean', 'minutes')),
+  type text not null default 'boolean',
   target integer,
   sort_order integer not null default 0,
   archived boolean not null default false,
   created_at timestamptz not null default now(),
   unique (user_id, key)
 );
+
+-- config columns for the preset habits
+alter table habits add column if not exists unit text;
+alter table habits add column if not exists time_of_day text;
+
+-- migrate the old type name, then re-apply the constraint
+alter table habits drop constraint if exists habits_type_check;
+update habits set type = 'duration', unit = coalesce(unit, 'min') where type = 'minutes';
+alter table habits add constraint habits_type_check
+  check (type in ('boolean', 'time', 'duration', 'count'));
 
 alter table habits enable row level security;
 

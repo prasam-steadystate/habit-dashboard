@@ -382,41 +382,68 @@ body {
 .modal-head h2 { font-size: 17px; font-weight: 650; letter-spacing: -.3px; }
 .modal-note { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
 
-.srow {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px; margin-bottom: 8px;
+.prow {
+  padding: 12px 14px; margin-bottom: 8px;
   border: 1px solid var(--border); border-radius: 12px;
   background: rgba(255, 255, 255, .02);
+  transition: border-color .2s, background .2s;
 }
 
-.srow input, .srow select {
+.prow.on {
+  border-color: rgba(62, 207, 142, .3);
+  background: rgba(62, 207, 142, .04);
+}
+
+.prow-main { display: flex; align-items: center; gap: 12px; }
+.prow .p-emoji { font-size: 18px; width: 24px; text-align: center; }
+.prow .p-name { font-size: 14px; font-weight: 550; }
+.prow.on .p-name { color: var(--text); }
+.prow:not(.on) .p-name { color: var(--muted); }
+
+/* toggle switch */
+.switch { position: relative; display: inline-block; width: 40px; height: 23px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: rgba(255, 255, 255, .12); border-radius: 99px;
+  transition: background .2s;
+}
+
+.slider::before {
+  content: ""; position: absolute;
+  height: 17px; width: 17px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%;
+  transition: transform .2s;
+}
+
+.switch input:checked + .slider { background: var(--green); }
+.switch input:checked + .slider::before { transform: translateX(17px); }
+.switch input:focus-visible + .slider { box-shadow: 0 0 0 3px rgba(62, 207, 142, .35); }
+
+.prow-config {
+  display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.prow-config:empty { display: none; }
+
+.cfg {
+  display: flex; flex-direction: column; gap: 5px;
+  font-size: 11px; color: var(--muted);
+}
+
+.cfg input, .cfg select {
   padding: 8px 10px; border-radius: 9px;
   border: 1px solid var(--border); background: rgba(255, 255, 255, .04);
-  color: var(--text); font-size: 13px; font-family: inherit; min-width: 0;
+  color: var(--text); font-size: 13px; font-family: inherit;
 }
 
-.srow input:focus, .srow select:focus { outline: none; border-color: rgba(62, 207, 142, .5); }
-
-.s-emoji { width: 46px; text-align: center; font-size: 17px !important; flex-shrink: 0; }
-.s-name { flex: 1; min-width: 90px; }
-.s-type { flex-shrink: 0; }
-.s-target-wrap { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
-.s-target { width: 68px; }
-.s-unit { font-size: 11px; color: var(--muted); }
-
-.srow-actions { display: flex; gap: 5px; margin-left: auto; flex-shrink: 0; }
-.srow-actions .ghost { padding: 6px 9px; font-size: 11.5px; }
-
-.srow.archived { opacity: .65; }
-.s-emoji-static { width: 46px; text-align: center; font-size: 17px; }
-.s-name-static { flex: 1; font-size: 13px; }
-
-.archived-head {
-  font-size: 11px; color: var(--muted); letter-spacing: .4px;
-  margin: 20px 0 10px; text-transform: uppercase;
-}
-
-#add-habit { margin-top: 6px; }
+.cfg input:focus, .cfg select:focus { outline: none; border-color: rgba(62, 207, 142, .5); }
+.cfg input[type="number"] { width: 84px; }
+.cfg input[type="time"] { width: 130px; }
+.cfg-static { font-size: 12px; color: var(--muted); padding-bottom: 9px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
@@ -466,16 +493,10 @@ body {
   .strip.row { gap: 3px; }
 }
 
-/* settings modal on small screens: rows wrap instead of squeezing */
 @media (max-width: 640px) {
   #settings-overlay { padding: 16px 12px; }
   .modal { padding: 20px 16px; border-radius: 16px; }
-
-  .srow { flex-wrap: wrap; gap: 8px; }
-  .s-name { flex: 1 1 100%; order: 3; }
-  .s-emoji { order: 1; }
-  .s-type { order: 2; flex: 1; }
-  .s-target-wrap { order: 4; }
-  .srow-actions { order: 5; margin-left: auto; }
-  .srow-actions .ghost { padding: 8px 11px; font-size: 12px; }
+  .prow-config { gap: 10px; }
+  .cfg input[type="number"] { width: 76px; }
+  .cfg input[type="time"] { width: 120px; }
 }
