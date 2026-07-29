@@ -53,6 +53,11 @@ const soundToggle = document.getElementById("sound-toggle");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsOverlay = document.getElementById("settings-overlay");
 const settingsList = document.getElementById("settings-list");
+const dayOverlay = document.getElementById("day-overlay");
+const dayList = document.getElementById("day-list");
+const dayDateInput = document.getElementById("day-date");
+const dayPrevBtn = document.getElementById("day-prev");
+const dayNextBtn = document.getElementById("day-next");
 
 let HABITS = [];       // active habits, from the database
 let allHabitRows = []; // including archived, so toggles know what already exists
@@ -63,6 +68,8 @@ let customStart = null;
 let customEnd = null;
 let timerIntervals = {};
 let lastAllGreen = false;
+let editorDate = null;      // day currently open in the editor
+let editorEntries = {};     // { habitKey: { done, value } } for that day
 
 /* ---------- dates ---------- */
 
@@ -710,7 +717,153 @@ document.getElementById("settings-close").addEventListener("click", closeSetting
 document.getElementById("empty-add").addEventListener("click", openSettings);
 settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeSettings(); });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !settingsOverlay.classList.contains("hidden")) closeSettings();
+  if (e.key !== "Escape") return;
+  if (!dayOverlay.classList.contains("hidden")) closeDayEditor();
+  else if (!settingsOverlay.classList.contains("hidden")) closeSettings();
+});
+
+/* ---------- day editor (backfilling past days) ---------- */
+
+function prettyDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const today = todayStr();
+  if (dateStr === today) return "Today";
+  if (dateStr === addDays(today, -1)) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+}
+
+// Status of the day currently open in the editor, using editorEntries.
+function editorDayStatus() {
+  if (!HABITS.length) return "none";
+  let hasData = false;
+  let missed = 0;
+  for (const h of HABITS) {
+    const e = editorEntries[h.key];
+    if (e) hasData = true;
+    if (!(e && e.done)) missed++;
+  }
+  if (!hasData) return "none";
+  if (missed === 0) return "green";
+  if (missed === 1 && HABITS.length >= YELLOW_MIN_HABITS) return "yellow";
+  return "red";
+}
+
+async function loadEditorDay() {
+  const rows = await getEntries(editorDate, editorDate);
+  editorEntries = {};
+  for (const r of rows) editorEntries[r.habit_id] = { done: r.done, value: r.value };
+}
+
+function renderDayEditor() {
+  document.querySelector("#day-overlay .modal-head h2").textContent = prettyDate(editorDate);
+  dayDateInput.value = editorDate;
+  dayDateInput.max = todayStr();
+  dayNextBtn.disabled = editorDate >= todayStr();
+
+  const status = editorDayStatus();
+  document.getElementById("day-pill").className = "status s-" + status;
+  const done = HABITS.filter((h) => editorEntries[h.key] && editorEntries[h.key].done).length;
+  document.getElementById("day-pill-text").textContent =
+    status === "none" ? "Nothing logged" : `${done} of ${HABITS.length} done`;
+
+  dayList.innerHTML = HABITS.map((h) => {
+    const e = editorEntries[h.key] || { done: false, value: null };
+    const numeric = isNumeric(h);
+    return `
+      <div class="drow${e.done ? " done" : ""}" data-habit="${h.key}">
+        <span class="d-emoji">${h.emoji}</span>
+        <span class="d-name">${habitTitle(h)}</span>
+        ${numeric ? `
+          <input type="number" class="d-value" min="0"
+                 step="${h.type === "duration" && h.unit === "hr" ? "0.5" : "1"}"
+                 value="${e.value != null ? displayValue(h, e.value) : ""}" placeholder="0" />
+          <span class="d-unit">${unitLabel(h)}</span>
+        ` : `
+          <button class="d-tick">✓</button>
+        `}
+      </div>`;
+  }).join("");
+}
+
+async function saveEditorEntry(habitKey, payload) {
+  const prev = editorEntries[habitKey];
+  editorEntries[habitKey] = { done: payload.done, value: payload.value ?? null };
+  renderDayEditor();
+
+  try {
+    await setEntry(habitKey, editorDate, payload);
+    // keep the dashboard in sync without a full refetch
+    if (entriesByHabit[habitKey]) {
+      entriesByHabit[habitKey][editorDate] = { done: payload.done, value: payload.value ?? null };
+    }
+    updateTracker();
+    renderCards();
+  } catch (err) {
+    console.error(err);
+    if (prev) editorEntries[habitKey] = prev; else delete editorEntries[habitKey];
+    renderDayEditor();
+    alert("Couldn't save that day — check your connection and try again.");
+  }
+}
+
+dayList.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("d-tick")) return;
+  const key = e.target.closest(".drow").dataset.habit;
+  const wasDone = !!(editorEntries[key] && editorEntries[key].done);
+  saveEditorEntry(key, { done: !wasDone, value: null });
+});
+
+dayList.addEventListener("change", (e) => {
+  if (!e.target.classList.contains("d-value")) return;
+  const key = e.target.closest(".drow").dataset.habit;
+  const h = habitByKey(key);
+  const raw = e.target.value === "" ? 0 : parseFloat(e.target.value);
+  if (isNaN(raw) || raw < 0) return renderDayEditor();
+  // duration is stored in minutes no matter which unit is displayed
+  const stored = h.type === "duration" && h.unit === "hr" ? Math.round(raw * 60) : Math.round(raw);
+  saveEditorEntry(key, { done: stored >= (h.target || Infinity), value: stored });
+});
+
+async function openDayEditor(date) {
+  if (!date || date > todayStr() || !HABITS.length) return;
+  editorDate = date;
+  try {
+    await loadEditorDay();
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't load that day.");
+    return;
+  }
+  renderDayEditor();
+  dayOverlay.classList.remove("hidden");
+}
+
+function closeDayEditor() { dayOverlay.classList.add("hidden"); }
+
+async function stepDay(delta) {
+  const next = addDays(editorDate, delta);
+  if (next > todayStr()) return;
+  await openDayEditor(next);
+}
+
+dayPrevBtn.addEventListener("click", () => stepDay(-1));
+dayNextBtn.addEventListener("click", () => stepDay(1));
+dayDateInput.addEventListener("change", () => openDayEditor(dayDateInput.value));
+document.getElementById("day-close").addEventListener("click", closeDayEditor);
+dayOverlay.addEventListener("click", (e) => { if (e.target === dayOverlay) closeDayEditor(); });
+
+// any heatmap cell opens that day
+function cellClickHandler(e) {
+  const cell = e.target.closest(".cell");
+  if (cell && cell.title) openDayEditor(cell.title);
+}
+document.getElementById("master-strip").addEventListener("click", cellClickHandler);
+habitsEl.addEventListener("click", cellClickHandler);
+
+// Heatmap cells are only a few pixels wide on a phone, so the editor also
+// needs a real button. Opens on yesterday, the day you most likely forgot.
+document.getElementById("edit-day-btn").addEventListener("click", () => {
+  openDayEditor(addDays(todayStr(), -1));
 });
 
 /* ---------- view wiring ---------- */

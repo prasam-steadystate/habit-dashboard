@@ -56,6 +56,7 @@
             <button data-range="ytd">YTD</button>
             <button data-range="custom">Custom</button>
           </div>
+          <button class="ghost" id="edit-day-btn" title="Log a past day">📅 Past day</button>
           <button class="ghost icon-btn" id="sound-toggle" title="Toggle sound">🔊</button>
           <button class="ghost icon-btn" id="settings-btn" title="Edit habits">⚙</button>
           <button class="ghost" id="sign-out">Sign out</button>
@@ -113,10 +114,11 @@
           <div id="master-strip" class="strip-wrap"></div>
 
           <div class="legend">
-            <span><i class="lg-green"></i> All 4</span>
+            <span><i class="lg-green"></i> All done</span>
             <span><i class="lg-yellow"></i> Missed 1</span>
             <span><i class="lg-red"></i> Missed 2+</span>
             <span><i class="lg-empty"></i> No data</span>
+            <span class="legend-hint">Tap any day to edit it</span>
           </div>
         </div>
       </div>
@@ -138,6 +140,27 @@
       </div>
       <p class="modal-note">Switch habits on or off. Turning one off hides it but keeps its history — switch it back on and your streak is still there.</p>
       <div id="settings-list"></div>
+    </div>
+  </div>
+
+  <!-- DAY EDITOR -->
+  <div id="day-overlay" class="hidden">
+    <div class="modal modal-narrow">
+      <div class="modal-head">
+        <h2>Edit day</h2>
+        <button class="ghost icon-btn" id="day-close">✕</button>
+      </div>
+
+      <div class="day-nav">
+        <button class="ghost icon-btn" id="day-prev" title="Previous day">‹</button>
+        <input type="date" id="day-date" />
+        <button class="ghost icon-btn" id="day-next" title="Next day">›</button>
+      </div>
+
+      <div class="day-status"><span class="status" id="day-pill"><span class="dot"></span><span id="day-pill-text"></span></span></div>
+
+      <div id="day-list"></div>
+      <p class="modal-note" id="day-note">Changes save immediately.</p>
     </div>
   </div>
 
