@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Trends · Steady State Growth</title>
+  <meta name="theme-color" content="#0A0C10" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="loading-view">
+    <p class="muted-note">Loading…</p>
+  </div>
+
+  <div id="trends-view" class="hidden">
+    <div class="shell">
+
+      <div class="topbar">
+        <div class="brand">
+          <a class="mark mark-link" href="index.html" title="Back to dashboard">
+            <svg width="17" height="17" viewBox="0 0 100 100">
+              <path d="M12 74 L36 54 L52 63 L88 24" stroke="#3ECF8E" stroke-width="10" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <div>
+            <h1>Trends</h1>
+            <div class="sub"><a href="index.html" class="back-link">← Back to dashboard</a></div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <select id="habit-select" class="habit-select"></select>
+          <div class="seg" id="range-seg">
+            <button data-range="30d" class="on">30d</button>
+            <button data-range="90d">90d</button>
+            <button data-range="6m">6m</button>
+            <button data-range="12m">12m</button>
+            <button data-range="ytd">YTD</button>
+            <button data-range="custom">Custom</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="custom-range" class="hidden">
+        <input type="date" id="range-start" />
+        <span>to</span>
+        <input type="date" id="range-end" />
+      </div>
+
+      <div id="no-numeric" class="hidden">
+        <div id="empty-state">
+          <p>No measurable habits switched on.</p>
+          <p class="muted-note">Trends need a habit that records an amount — like Work, Mindfulness, Water, or Meals.</p>
+        </div>
+      </div>
+
+      <div id="charts">
+        <div class="stats-card">
+          <div class="stats">
+            <div class="stat"><div class="v" id="stat-total">—</div><div class="k">Total</div></div>
+            <div class="stat"><div class="v" id="stat-avg">—</div><div class="k">Daily average</div></div>
+            <div class="stat"><div class="v" id="stat-best">—</div><div class="k">Best day</div></div>
+            <div class="stat"><div class="v" id="stat-hit">—</div><div class="k">Days target hit</div></div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <h2 id="daily-title">Daily total</h2>
+            <span class="chart-sub" id="daily-sub"></span>
+          </div>
+          <div class="chart-body">
+            <div class="y-axis" id="daily-y"></div>
+            <div class="plot-wrap">
+              <div class="gridlines" id="daily-grid"></div>
+              <div class="bars" id="daily-bars"></div>
+              <div class="tooltip hidden" id="daily-tip"></div>
+            </div>
+          </div>
+          <div class="x-axis" id="daily-x"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <h2>Average by day of week</h2>
+            <span class="chart-sub" id="dow-sub"></span>
+          </div>
+          <div class="chart-body">
+            <div class="y-axis" id="dow-y"></div>
+            <div class="plot-wrap">
+              <div class="gridlines" id="dow-grid"></div>
+              <div class="bars bars-wide" id="dow-bars"></div>
+              <div class="tooltip hidden" id="dow-tip"></div>
+            </div>
+          </div>
+          <div class="x-axis x-axis-dow" id="dow-x"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="trends.js"></script>
+</body>
+</html>
