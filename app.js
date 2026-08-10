@@ -317,6 +317,18 @@ function buildStrip(container, dates, classForDate, mini) {
   }</div>`;
 }
 
+/* Animate a throwaway element, then remove it.
+   Some engines never fire `onfinish`, which silently leaks a DOM node on every
+   completion, so back it up with the promise and a timer. remove() is safe to
+   call more than once. */
+function animateThenRemove(el, keyframes, options) {
+  const anim = el.animate(keyframes, options);
+  const cleanup = () => el.remove();
+  if (anim.finished && anim.finished.then) anim.finished.then(cleanup, cleanup);
+  anim.onfinish = cleanup;
+  setTimeout(cleanup, (options.duration || 0) + 150);
+}
+
 /* ---------- tracker ---------- */
 
 function statusCopy(status) {
@@ -354,8 +366,12 @@ function updateTracker() {
   document.getElementById("stat-completion").innerHTML = `${stats.completionPct}<small>%</small>`;
 
   document.getElementById("strip-label").textContent = label;
-  buildStrip(document.getElementById("master-strip"), dateList(start, end),
-    (d) => STATUS_CLASS[computeDayStatus(d)], false);
+  // The top tracker is always a weekday-aligned grid, never a single row.
+  const masterStrip = document.getElementById("master-strip");
+  masterStrip.className = "cal-scroll";
+  buildCalendarGrid(masterStrip, dateList(start, end),
+    (d) => STATUS_CLASS[computeDayStatus(d)],
+    { showLabels: true, showMonths: true, todayDate: todayStr() });
 }
 
 function celebrate() {
@@ -370,10 +386,10 @@ function celebrate() {
     host.appendChild(s);
     const angle = (Math.PI * 2 * i) / 22 + Math.random() * 0.4;
     const dist = 55 + Math.random() * 45;
-    s.animate([
+    animateThenRemove(s, [
       { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
       { transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0.2)`, opacity: 0 },
-    ], { duration: 700 + Math.random() * 350, easing: "cubic-bezier(.15,.7,.3,1)" }).onfinish = () => s.remove();
+    ], { duration: 700 + Math.random() * 350, easing: "cubic-bezier(.15,.7,.3,1)" });
   }
   document.querySelector(".ring").animate(
     [{ transform: "scale(1)" }, { transform: "scale(1.07)" }, { transform: "scale(1)" }],
@@ -489,15 +505,52 @@ function updateCard(habitKey) {
   if (last && last.title === today) last.className = "cell" + (done ? " g" : "") + " today";
 }
 
+// Dashboard-only completion animation. The day editor deliberately doesn't
+// call this — backfilling a past day shouldn't feel like today's win.
 function animateTick(habitKey) {
   const card = cardEl(habitKey);
   if (!card) return;
-  card.querySelector(".tick").animate(
-    [{ transform: "scale(1)" }, { transform: "scale(1.35)", offset: 0.45 }, { transform: "scale(1)" }],
-    { duration: 380, easing: "cubic-bezier(.2,.9,.25,1.2)" });
+  const tick = card.querySelector(".tick");
+
+  // green wave washing out from the check button
+  card.querySelectorAll(".check-ripple").forEach((r) => r.remove());
+  const ripple = document.createElement("span");
+  ripple.className = "check-ripple";
+  card.appendChild(ripple);
+  const tickBox = tick.getBoundingClientRect();
+  const cardBox = card.getBoundingClientRect();
+  ripple.style.left = `${tickBox.left - cardBox.left + tickBox.width / 2}px`;
+  ripple.style.top = `${tickBox.top - cardBox.top + tickBox.height / 2}px`;
+  animateThenRemove(ripple,
+    [
+      { transform: "translate(-50%,-50%) scale(0.15)", opacity: 0.6 },
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 0 },
+    ],
+    { duration: 620, easing: "cubic-bezier(.2,.7,.3,1)" });
+
+  tick.animate(
+    [
+      { transform: "scale(1) rotate(0deg)" },
+      { transform: "scale(1.45) rotate(-12deg)", offset: 0.4 },
+      { transform: "scale(0.94) rotate(3deg)", offset: 0.7 },
+      { transform: "scale(1) rotate(0deg)" },
+    ],
+    { duration: 500, easing: "cubic-bezier(.2,.9,.25,1.2)" }
+  );
+
   card.animate(
-    [{ transform: "translateY(0)" }, { transform: "translateY(-4px)" }, { transform: "translateY(0)" }],
-    { duration: 420, easing: "ease-out" });
+    [
+      { transform: "translateY(0) scale(1)" },
+      { transform: "translateY(-6px) scale(1.015)", offset: 0.4 },
+      { transform: "translateY(0) scale(1)" },
+    ],
+    { duration: 520, easing: "cubic-bezier(.2,.8,.3,1)" }
+  );
+
+  card.querySelector(".icon").animate(
+    [{ transform: "scale(1)" }, { transform: "scale(1.25)", offset: 0.35 }, { transform: "scale(1)" }],
+    { duration: 460, easing: "ease-out" }
+  );
 }
 
 /* ---------- timers (duration habits only, scoped per user) ---------- */

@@ -12,14 +12,19 @@ const customRangeEl = document.getElementById("custom-range");
 const rangeStartInput = document.getElementById("range-start");
 const rangeEndInput = document.getElementById("range-end");
 const chartsEl = document.getElementById("charts");
-const noNumericEl = document.getElementById("no-numeric");
+const noNumericEl = document.getElementById("no-habits");
+const cardDaily = document.getElementById("card-daily");
+const cardGrid = document.getElementById("card-grid");
 
-let numericHabits = [];
+let allHabits = [];
 let currentHabit = null;
 let currentRange = "30d";
 let customStart = null;
 let customEnd = null;
-let valuesByDate = {}; // 'YYYY-MM-DD' -> minutes/count
+let valuesByDate = {}; // 'YYYY-MM-DD' -> minutes/count (measurable habits)
+let doneByDate = {};   // 'YYYY-MM-DD' -> true (yes/no habits)
+
+function isMeasurable(h) { return h && (h.type === "duration" || h.type === "count"); }
 
 /* ---------- dates ---------- */
 
@@ -91,22 +96,21 @@ function fmt(h, stored) {
 /* ---------- data ---------- */
 
 async function loadHabitList() {
-  const habits = await getHabits();
-  numericHabits = habits.filter((h) => h.type === "duration" || h.type === "count");
+  allHabits = await getHabits();
 
-  if (!numericHabits.length) {
+  if (!allHabits.length) {
     chartsEl.classList.add("hidden");
     noNumericEl.classList.remove("hidden");
     habitSelect.classList.add("hidden");
     return false;
   }
 
-  habitSelect.innerHTML = numericHabits
+  habitSelect.innerHTML = allHabits
     .map((h) => `<option value="${h.key}">${h.emoji} ${h.name}</option>`)
     .join("");
 
-  // default to Work when it's on, otherwise the first numeric habit
-  currentHabit = numericHabits.find((h) => h.key === "work") || numericHabits[0];
+  // default to Work when it's on, otherwise the first habit
+  currentHabit = allHabits.find((h) => h.key === "work") || allHabits[0];
   habitSelect.value = currentHabit.key;
   return true;
 }
@@ -115,19 +119,24 @@ async function loadValues() {
   const { start, end } = rangeBounds();
   const rows = await getEntries(start, end);
   valuesByDate = {};
+  doneByDate = {};
   for (const r of rows) {
     if (r.habit_id !== currentHabit.key) continue;
     valuesByDate[r.date] = r.value || 0;
+    if (r.done) doneByDate[r.date] = true;
   }
 }
 
 // Days actually in play: never count days before this habit's first entry,
-// so a wide range doesn't dilute averages with pre-tracking days.
+// so a wide range doesn't dilute rates with pre-tracking days.
 function activeDates() {
   const { start, end } = rangeBounds();
   const today = todayStr();
   const realEnd = end > today ? today : end;
-  const logged = Object.keys(valuesByDate).sort();
+  // a yes/no habit only ever writes a row when it's touched, so consider both maps
+  const logged = Object.keys(
+    Object.assign({}, valuesByDate, doneByDate)
+  ).sort();
   if (!logged.length) return []; // nothing recorded for this habit at all
   const firstLogged = logged[0];
   const effStart = firstLogged > start ? firstLogged : start;
@@ -225,6 +234,93 @@ function renderDaily() {
     .join("");
 }
 
+/* ---------- completion calendar (yes/no habits) ---------- */
+
+function renderGrid() {
+  const h = currentHabit;
+  const dates = activeDates();
+  const holder = document.getElementById("grid-holder");
+
+  document.getElementById("grid-title").textContent = `${h.name} calendar`;
+
+  if (!dates.length) {
+    holder.innerHTML = `<p class="muted-note">Nothing logged in this range yet.</p>`;
+    document.getElementById("grid-sub").textContent = "";
+    return;
+  }
+
+  const done = dates.filter((d) => doneByDate[d]).length;
+  document.getElementById("grid-sub").textContent =
+    `${done} of ${dates.length} days · ${Math.round((done / dates.length) * 100)}%`;
+
+  buildCalendarGrid(holder, dates, (d) => (doneByDate[d] ? "g" : ""), {
+    showLabels: true,
+    showMonths: true,
+    todayDate: todayStr(),
+  });
+}
+
+/* ---------- day-of-week: miss rate (yes/no habits) ---------- */
+
+function renderDowMissRate() {
+  const h = currentHabit;
+  const dates = activeDates();
+  const barsEl = document.getElementById("dow-bars");
+  const tip = document.getElementById("dow-tip");
+  const wrap = barsEl.parentElement;
+
+  document.getElementById("dow-title").textContent = "Miss rate by day of week";
+
+  if (!dates.length) {
+    barsEl.innerHTML = `<p class="muted-note">Nothing logged in this range yet.</p>`;
+    document.getElementById("dow-y").innerHTML = "";
+    document.getElementById("dow-grid").innerHTML = "";
+    document.getElementById("dow-x").innerHTML = "";
+    document.getElementById("dow-sub").textContent = "";
+    return;
+  }
+
+  const buckets = {};
+  for (const dow of DOW_ORDER) buckets[dow] = { days: 0, missed: 0 };
+  for (const d of dates) {
+    const b = buckets[dowOf(d)];
+    b.days++;
+    if (!doneByDate[d]) b.missed++;
+  }
+
+  const rates = DOW_ORDER.map((dow) => {
+    const b = buckets[dow];
+    return { dow, rate: b.days ? (b.missed / b.days) * 100 : 0, ...b };
+  });
+
+  // always scale 0-100 so the percentages read honestly
+  const ticks = [100, 75, 50, 25, 0];
+  document.getElementById("dow-y").innerHTML = ticks.map((t) => `<span>${t}%</span>`).join("");
+  document.getElementById("dow-grid").innerHTML = ticks.map(() => `<div class="gridline"></div>`).join("");
+
+  const worst = rates.reduce((m, a) => (a.rate > m.rate ? a : m), rates[0]);
+  document.getElementById("dow-sub").textContent =
+    worst.rate > 0 ? `Most missed: ${DOW_FULL[worst.dow]}` : "No misses in this range";
+
+  barsEl.innerHTML = "";
+  rates.forEach((a) => {
+    const bar = document.createElement("div");
+    const isWorst = a.dow === worst.dow && a.rate > 0;
+    bar.className = "bar miss" + (isWorst ? " worst" : "") + (a.rate === 0 ? " zero" : "");
+    bar.style.height = Math.max(a.rate > 0 ? 2 : 1, a.rate) + "%";
+    barsEl.appendChild(bar);
+
+    attachTip(bar, tip, wrap, `
+      <div class="tip-date">${DOW_FULL[a.dow]}</div>
+      <div class="tip-val">${Math.round(a.rate)}% missed</div>
+      <div class="tip-meta">missed ${a.missed} of ${a.days} ${a.days === 1 ? "day" : "days"}</div>
+    `);
+  });
+
+  document.getElementById("dow-x").innerHTML =
+    DOW_ORDER.map((dow) => `<span>${DOW_LABEL[dow]}</span>`).join("");
+}
+
 /* ---------- day-of-week chart ---------- */
 
 function renderDow() {
@@ -233,6 +329,8 @@ function renderDow() {
   const barsEl = document.getElementById("dow-bars");
   const tip = document.getElementById("dow-tip");
   const wrap = barsEl.parentElement;
+
+  document.getElementById("dow-title").textContent = "Average by day of week";
 
   if (!dates.length) {
     barsEl.innerHTML = `<p class="muted-note">Nothing logged in this range yet.</p>`;
@@ -289,47 +387,82 @@ function renderDow() {
 
 /* ---------- summary ---------- */
 
+function setStat(slot, value, label) {
+  document.getElementById(`stat-${slot}`).innerHTML = value;
+  document.getElementById(`stat-${slot}-k`).textContent = label;
+}
+
+// longest run of consecutive completed days, and the run ending most recently
+function streaksFor(dates) {
+  let best = 0, run = 0;
+  for (const d of dates) {
+    if (doneByDate[d]) { run++; if (run > best) best = run; }
+    else run = 0;
+  }
+  let current = 0;
+  for (let i = dates.length - 1; i >= 0; i--) {
+    if (doneByDate[dates[i]]) current++;
+    else if (i === dates.length - 1) continue; // today unfinished doesn't break it
+    else break;
+  }
+  return { best, current };
+}
+
 function renderSummary() {
   const h = currentHabit;
   const dates = activeDates();
-  const vals = dates.map((d) => valuesByDate[d] || 0);
-  const total = vals.reduce((a, b) => a + b, 0);
-  const avg = dates.length ? total / dates.length : 0;
-  const best = vals.length ? Math.max(...vals) : 0;
-  const hit = h.target ? vals.filter((v) => v >= h.target).length : 0;
-
-  const unit = unitLabel(h);
-  const num = (stored) => {
-    const v = toDisplay(h, stored);
-    return Number.isInteger(v) ? v : Math.round(v * 10) / 10;
-  };
 
   if (!dates.length) {
-    ["stat-total", "stat-avg", "stat-best", "stat-hit"].forEach((id) => {
-      document.getElementById(id).textContent = "—";
-    });
+    [1, 2, 3, 4].forEach((s) => document.getElementById(`stat-${s}`).textContent = "—");
     return;
   }
 
-  document.getElementById("stat-total").innerHTML = `${num(total)}<small>${unit}</small>`;
-  document.getElementById("stat-avg").innerHTML = `${num(avg)}<small>${unit}</small>`;
-  document.getElementById("stat-best").innerHTML = `${num(best)}<small>${unit}</small>`;
-  document.getElementById("stat-hit").innerHTML = h.target
-    ? `${hit}<small>/${dates.length}</small>`
-    : `—`;
+  if (isMeasurable(h)) {
+    const vals = dates.map((d) => valuesByDate[d] || 0);
+    const total = vals.reduce((a, b) => a + b, 0);
+    const best = Math.max(...vals);
+    const hit = h.target ? vals.filter((v) => v >= h.target).length : 0;
+    const unit = unitLabel(h);
+    const num = (stored) => {
+      const v = toDisplay(h, stored);
+      return Number.isInteger(v) ? v : Math.round(v * 10) / 10;
+    };
+    setStat(1, `${num(total)}<small>${unit}</small>`, "Total");
+    setStat(2, `${num(total / dates.length)}<small>${unit}</small>`, "Daily average");
+    setStat(3, `${num(best)}<small>${unit}</small>`, "Best day");
+    setStat(4, h.target ? `${hit}<small>/${dates.length}</small>` : "—", "Days target hit");
+    return;
+  }
+
+  const done = dates.filter((d) => doneByDate[d]).length;
+  const { best, current } = streaksFor(dates);
+  setStat(1, `${done}<small>/${dates.length}</small>`, "Days completed");
+  setStat(2, `${Math.round((done / dates.length) * 100)}<small>%</small>`, "Completion rate");
+  setStat(3, `${current}<small>d</small>`, "Current streak");
+  setStat(4, `${best}<small>d</small>`, "Best streak");
 }
 
 /* ---------- wiring ---------- */
 
 async function refresh() {
   await loadValues();
+  const measurable = isMeasurable(currentHabit);
+
+  cardDaily.classList.toggle("hidden", !measurable);
+  cardGrid.classList.toggle("hidden", measurable);
+
   renderSummary();
-  renderDaily();
-  renderDow();
+  if (measurable) {
+    renderDaily();
+    renderDow();
+  } else {
+    renderGrid();
+    renderDowMissRate();
+  }
 }
 
 habitSelect.addEventListener("change", () => {
-  currentHabit = numericHabits.find((h) => h.key === habitSelect.value);
+  currentHabit = allHabits.find((h) => h.key === habitSelect.value);
   refresh();
 });
 

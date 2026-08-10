@@ -6,7 +6,8 @@
   <title>Trends · Steady State Growth</title>
   <meta name="theme-color" content="#0A0C10" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="style.css" />
+  <!-- bump ?v= on every deploy so browsers can't serve stale CSS/JS -->
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
 
@@ -50,24 +51,25 @@
         <input type="date" id="range-end" />
       </div>
 
-      <div id="no-numeric" class="hidden">
+      <div id="no-habits" class="hidden">
         <div id="empty-state">
-          <p>No measurable habits switched on.</p>
-          <p class="muted-note">Trends need a habit that records an amount — like Work, Mindfulness, Water, or Meals.</p>
+          <p>No habits switched on.</p>
+          <p class="muted-note">Turn some on from the dashboard's settings to see trends here.</p>
         </div>
       </div>
 
       <div id="charts">
         <div class="stats-card">
           <div class="stats">
-            <div class="stat"><div class="v" id="stat-total">—</div><div class="k">Total</div></div>
-            <div class="stat"><div class="v" id="stat-avg">—</div><div class="k">Daily average</div></div>
-            <div class="stat"><div class="v" id="stat-best">—</div><div class="k">Best day</div></div>
-            <div class="stat"><div class="v" id="stat-hit">—</div><div class="k">Days target hit</div></div>
+            <div class="stat"><div class="v" id="stat-1">—</div><div class="k" id="stat-1-k">Total</div></div>
+            <div class="stat"><div class="v" id="stat-2">—</div><div class="k" id="stat-2-k">Daily average</div></div>
+            <div class="stat"><div class="v" id="stat-3">—</div><div class="k" id="stat-3-k">Best day</div></div>
+            <div class="stat"><div class="v" id="stat-4">—</div><div class="k" id="stat-4-k">Days target hit</div></div>
           </div>
         </div>
 
-        <div class="chart-card">
+        <!-- measurable habits: daily amounts -->
+        <div class="chart-card" id="card-daily">
           <div class="chart-head">
             <h2 id="daily-title">Daily total</h2>
             <span class="chart-sub" id="daily-sub"></span>
@@ -83,9 +85,23 @@
           <div class="x-axis" id="daily-x"></div>
         </div>
 
+        <!-- yes/no habits: calendar grid -->
+        <div class="chart-card hidden" id="card-grid">
+          <div class="chart-head">
+            <h2 id="grid-title">Completion calendar</h2>
+            <span class="chart-sub" id="grid-sub"></span>
+          </div>
+          <div id="grid-holder" class="cal-scroll"></div>
+          <div class="grid-legend">
+            <span><i class="lg-empty"></i> Missed</span>
+            <span><i class="lg-green"></i> Done</span>
+          </div>
+        </div>
+
+        <!-- shared: per-weekday chart -->
         <div class="chart-card">
           <div class="chart-head">
-            <h2>Average by day of week</h2>
+            <h2 id="dow-title">Average by day of week</h2>
             <span class="chart-sub" id="dow-sub"></span>
           </div>
           <div class="chart-body">
@@ -104,8 +120,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="storage.js"></script>
-  <script src="trends.js"></script>
+  <script src="config.js?v=7"></script>
+  <script src="storage.js?v=7"></script>
+  <script src="calendar.js?v=7"></script>
+  <script src="trends.js?v=7"></script>
 </body>
 </html>
