@@ -62,3 +62,55 @@ create policy "habits: select own" on habits for select using (auth.uid() = user
 create policy "habits: insert own" on habits for insert with check (auth.uid() = user_id);
 create policy "habits: update own" on habits for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "habits: delete own" on habits for delete using (auth.uid() = user_id);
+
+-- ── ideas ──────────────────────────────────────────────────────────────────
+create table if not exists ideas (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null default '',
+  body text not null default '',
+  created_at timestamptz not null default now(),
+  last_edited_at timestamptz
+);
+
+alter table ideas enable row level security;
+
+drop policy if exists "ideas: select own" on ideas;
+drop policy if exists "ideas: insert own" on ideas;
+drop policy if exists "ideas: update own" on ideas;
+drop policy if exists "ideas: delete own" on ideas;
+
+create policy "ideas: select own" on ideas for select using (auth.uid() = user_id);
+create policy "ideas: insert own" on ideas for insert with check (auth.uid() = user_id);
+create policy "ideas: update own" on ideas for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "ideas: delete own" on ideas for delete using (auth.uid() = user_id);
+
+-- ── idea_coats: one row per editing session ("coat of paint") ──────────────
+create table if not exists idea_coats (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  idea_id uuid not null references ideas(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idea_coats_idea_id_idx on idea_coats (idea_id);
+
+alter table idea_coats enable row level security;
+
+drop policy if exists "idea_coats: select own" on idea_coats;
+drop policy if exists "idea_coats: insert own" on idea_coats;
+
+create policy "idea_coats: select own" on idea_coats for select using (auth.uid() = user_id);
+
+-- Append-only on purpose: there is no update or delete policy, so a coat can
+-- never be edited or removed from the client. (Deleting the idea still clears
+-- its coats — foreign-key cascades don't go through row-level security.)
+-- The insert check also refuses a coat pointed at someone else's idea.
+create policy "idea_coats: insert own" on idea_coats for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from ideas
+      where ideas.id = idea_coats.idea_id and ideas.user_id = auth.uid()
+    )
+  );

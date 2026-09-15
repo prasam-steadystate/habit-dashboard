@@ -502,6 +502,188 @@ a.ghost { text-decoration: none; display: inline-flex; align-items: center; }
   .x-axis { margin-left: 44px; }
 }
 
+/* ---------- idea bank ---------- */
+a.primary-btn { text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap; }
+
+.stat-wide { min-width: 0; flex: 1 1 200px; }
+.v-text {
+  font-size: 15px !important; letter-spacing: -.2px !important; line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px;
+  padding-top: 4px;
+}
+.v-text small { font-size: 12px; color: var(--green); font-weight: 650; margin-left: 4px; }
+
+.idea-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.idea-card {
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(170deg, var(--card-a), var(--card-b));
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 18px 18px 16px;
+  color: var(--text); text-decoration: none;
+  min-height: 180px;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+
+/* lift with a shadow rather than a transform, so the card never shifts under the pointer */
+.idea-card:hover {
+  border-color: rgba(62, 207, 142, .35);
+  box-shadow: 0 10px 30px -14px rgba(62, 207, 142, .35);
+}
+
+.idea-card-head { display: flex; align-items: flex-start; gap: 12px; }
+.idea-card-head h3 {
+  flex: 1; min-width: 0;
+  font-size: 15px; font-weight: 630; letter-spacing: -.2px; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.is-untitled { color: var(--muted); font-style: italic; font-weight: 500; }
+
+.coat-badge {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 4px 10px 4px 7px; border-radius: 999px;
+  background: rgba(62, 207, 142, .1); border: 1px solid rgba(62, 207, 142, .3);
+  font-size: 12px; color: var(--green);
+}
+.coat-badge b { font-size: 13px; font-weight: 700; }
+.coat-badge .brush { font-size: 12px; }
+
+.idea-snippet {
+  flex: 1;
+  font-size: 13px; line-height: 1.55; color: #B3BAC7;
+  white-space: pre-line; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.idea-track, .coat-track {
+  position: relative; height: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.idea-dot, .coat-dot {
+  position: absolute; bottom: -4px;
+  width: 7px; height: 7px; border-radius: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  box-shadow: 0 0 0 2px var(--card-b);
+}
+
+.idea-meta {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 11px; color: var(--muted); flex-wrap: wrap;
+}
+.recent-chip {
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(240, 180, 41, .12); color: var(--yellow);
+  border: 1px solid rgba(240, 180, 41, .3); font-weight: 600;
+}
+
+/* editor */
+.editor-bar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.save-status { flex: 1; font-size: 12px; color: var(--muted); }
+.save-status.s-saved { color: var(--green); }
+.save-status.s-saving, .save-status.s-dirty { color: var(--muted); }
+.save-status.s-error { color: var(--red); }
+.danger-btn:hover { border-color: rgba(242, 84, 61, .5); color: var(--red); }
+
+.editor-layout {
+  display: grid; grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px; align-items: start;
+}
+
+.editor-card {
+  background: linear-gradient(170deg, var(--card-a), var(--card-b));
+  border: 1px solid var(--border); border-radius: 18px;
+  padding: 24px 26px 16px;
+}
+
+.idea-title-input, .idea-body-input {
+  width: 100%; border: none; outline: none; background: transparent;
+  color: var(--text); font-family: inherit; resize: none;
+}
+
+.idea-title-input {
+  font-size: 24px; font-weight: 680; letter-spacing: -.6px;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.idea-body-input {
+  font-size: 15px; line-height: 1.7; min-height: 320px;
+  overflow: hidden;
+}
+
+.idea-title-input::placeholder, .idea-body-input::placeholder { color: #4E5667; }
+
+.editor-foot {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted);
+}
+.kbd-hint { opacity: .75; }
+
+.coat-panel {
+  position: sticky; top: 20px;
+  background: linear-gradient(170deg, var(--card-a), var(--card-b));
+  border: 1px solid rgba(62, 207, 142, .22); border-radius: 18px;
+  padding: 20px; text-align: center;
+}
+
+.coat-panel-label { font-size: 11px; color: var(--muted); letter-spacing: .3px; }
+.coat-big {
+  font-size: 56px; font-weight: 720; letter-spacing: -2px; line-height: 1;
+  margin-top: 12px;
+  background: linear-gradient(160deg, var(--green-lt), #2FB5D6);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.coat-unit { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.coat-note {
+  font-size: 12px; line-height: 1.55; color: #B3BAC7;
+  margin: 16px 0 18px; padding: 10px 12px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--border);
+  border-radius: 10px; text-align: left;
+}
+.coat-note b { color: var(--text); }
+
+.coat-track-wrap { margin-bottom: 16px; text-align: left; }
+.coat-track { height: 16px; }
+.coat-dot { width: 9px; height: 9px; bottom: -5px; }
+.coat-track-ends {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--muted); margin-top: 8px;
+}
+
+.coat-facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 7px 12px;
+  text-align: left; font-size: 12px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+.coat-facts dt { color: var(--muted); }
+.coat-facts dd { text-align: right; }
+
+@media (max-width: 1000px) {
+  .idea-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
+  .editor-layout { grid-template-columns: 1fr; }
+  .coat-panel { position: static; order: -1; }
+  .editor-card { padding: 18px 16px 12px; border-radius: 16px; }
+  .idea-title-input { font-size: 20px; }
+  .v-text { max-width: none; }
+}
+
+@media (max-width: 600px) {
+  .idea-grid { grid-template-columns: 1fr; }
+  .idea-card { min-height: 0; }
+  .kbd-hint { display: none; }
+}
+
 /* ---------- day editor ---------- */
 .modal-narrow { max-width: 440px; }
 

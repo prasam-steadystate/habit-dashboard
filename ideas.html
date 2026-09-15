@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Prasam's idea bank</title>
+  <meta name="theme-color" content="#0A0C10" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <!-- bump ?v= on every deploy so browsers can't serve stale CSS/JS -->
+  <link rel="stylesheet" href="style.css?v=8" />
+</head>
+<body>
+
+  <div id="loading-view">
+    <p class="muted-note">Loading…</p>
+  </div>
+
+  <div id="ideas-view" class="hidden">
+    <div class="shell">
+
+      <div class="topbar">
+        <div class="brand">
+          <a class="mark mark-link" href="index.html" title="Back to dashboard">
+            <svg width="17" height="17" viewBox="0 0 100 100">
+              <path d="M12 74 L36 54 L52 63 L88 24" stroke="#3ECF8E" stroke-width="10" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <div>
+            <h1>Prasam's idea bank</h1>
+            <div class="sub"><a href="index.html" class="back-link">← Back to dashboard</a></div>
+          </div>
+        </div>
+
+        <div class="toolbar" id="list-toolbar">
+          <select id="sort-select" class="habit-select" aria-label="Sort ideas">
+            <option value="coats">Most coats</option>
+            <option value="recent">Recently painted</option>
+            <option value="newest">Newest</option>
+          </select>
+          <div class="seg" id="window-seg" title="Which coats count toward 'Most coats'">
+            <button data-days="" class="on">All time</button>
+            <button data-days="90">90d</button>
+            <button data-days="30">30d</button>
+            <button data-days="7">7d</button>
+          </div>
+          <a class="primary-btn" href="#new" id="new-idea">+ New idea</a>
+        </div>
+      </div>
+
+      <!-- LIST -->
+      <div id="list-view">
+        <div class="stats-card">
+          <div class="stats">
+            <div class="stat"><div class="v" id="sum-ideas">—</div><div class="k">Ideas</div></div>
+            <div class="stat"><div class="v" id="sum-coats">—</div><div class="k" id="sum-coats-k">Coats of paint</div></div>
+            <div class="stat"><div class="v" id="sum-active">—</div><div class="k" id="sum-active-k">Ideas worked on</div></div>
+            <div class="stat stat-wide"><div class="v v-text" id="sum-top">—</div><div class="k" id="sum-top-k">Most painted</div></div>
+          </div>
+        </div>
+
+        <div class="idea-grid" id="idea-grid"></div>
+
+        <div id="ideas-empty" class="hidden">
+          <div id="empty-state">
+            <p>No ideas in the bank yet.</p>
+            <a class="primary-btn" href="#new">Write your first idea</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div id="editor-view" class="hidden">
+        <div class="editor-bar">
+          <a class="ghost" href="#" id="editor-back">← All ideas</a>
+          <span class="save-status" id="save-status"></span>
+          <button class="ghost danger-btn" id="editor-delete">Delete</button>
+        </div>
+
+        <div class="editor-layout">
+          <div class="editor-card">
+            <input id="idea-title" class="idea-title-input" placeholder="Name this idea" maxlength="160" />
+            <textarea id="idea-body" class="idea-body-input"
+                      placeholder="What's the idea? Who's it for, why now, how would it make money, what would you test first…"></textarea>
+            <div class="editor-foot">
+              <span id="word-count">0 words</span>
+              <span class="kbd-hint">Saves automatically · Ctrl/⌘ + S to save now</span>
+            </div>
+          </div>
+
+          <aside class="coat-panel">
+            <div class="coat-panel-label">🖌️ Coats of paint counter</div>
+            <div class="coat-big"><span id="coat-num">0</span></div>
+            <div class="coat-unit" id="coat-unit">coats of paint</div>
+            <p class="coat-note" id="coat-note"></p>
+
+            <div class="coat-track-wrap">
+              <div class="coat-track" id="coat-track"></div>
+              <div class="coat-track-ends"><span id="track-start"></span><span>now</span></div>
+            </div>
+
+            <dl class="coat-facts" id="coat-facts"></dl>
+          </aside>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=8"></script>
+  <script src="storage.js?v=8"></script>
+  <script src="ideas.js?v=8"></script>
+</body>
+</html>

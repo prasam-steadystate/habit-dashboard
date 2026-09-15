@@ -93,3 +93,50 @@ async function setEntry(habitKey, date, { done, value = null }) {
   );
   if (error) throw error;
 }
+
+/* ---------- ideas ----------
+   ideas:      { id, user_id, title, body, created_at, last_edited_at }
+   idea_coats: { id, user_id, idea_id, created_at } — one row per editing
+               session. Append-only: the database has no update/delete policy
+               for it, so the counter can't be rewritten. */
+
+async function getIdeas() {
+  const { data, error } = await _supabase
+    .from("ideas")
+    .select("id, title, body, created_at, last_edited_at, idea_coats(created_at)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+async function createIdea({ title, body, last_edited_at }) {
+  const session = await getSession();
+  const { data, error } = await _supabase
+    .from("ideas")
+    .insert({ user_id: session.user.id, title, body, last_edited_at })
+    .select("id, created_at")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateIdea(id, patch) {
+  const { error } = await _supabase.from("ideas").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+async function deleteIdea(id) {
+  const { error } = await _supabase.from("ideas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+async function addCoat(ideaId) {
+  const session = await getSession();
+  const { data, error } = await _supabase
+    .from("idea_coats")
+    .insert({ user_id: session.user.id, idea_id: ideaId })
+    .select("created_at")
+    .single();
+  if (error) throw error;
+  return data;
+}
